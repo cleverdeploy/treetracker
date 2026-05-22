@@ -192,7 +192,7 @@ Postgres CA cert mounted via Dokploy secret to `/run/secrets/pg-ca.crt`.
 
 ## Deployment
 
-1. Create GitHub repo `wasimj/treetracker`, push initial code.
+1. Create GitHub repo `cleverdeploy/treetracker`, push initial code.
 2. In Dokploy: create application, point at GitHub repo, set Dockerfile build, attach `/data` volume, set env vars + Postgres CA secret, configure Traefik domain `treetracker.wasim.dev` with Let's Encrypt.
 3. Cloudflare DNS: A record `treetracker.wasim.dev → 178.104.246.72`, DNS-only (grey cloud) so LE HTTP-01 resolves.
 4. Create the `treetracker` database in shared Postgres and grant the app role.

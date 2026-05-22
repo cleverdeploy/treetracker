@@ -1,0 +1,40 @@
+{% extends "base.html" %}
+{% block title %}Tree #{{ tree.tag_number }}{% endblock %}
+{% block main %}
+<section class="tree-detail" data-tree-id="{{ tree.id }}">
+  <header>
+    <h1>Tree #{{ tree.tag_number }}</h1>
+    <p class="muted">
+      {{ tree.sighting_count }} sighting{{ '' if tree.sighting_count == 1 else 's' }} ·
+      first seen {{ tree.first_seen_at.strftime('%Y-%m-%d') }} ·
+      last seen {{ tree.last_seen_at.strftime('%Y-%m-%d') }}
+    </p>
+    <p class="muted">📍 {{ '%.5f'|format(tree.canonical_lat) }}, {{ '%.5f'|format(tree.canonical_lon) }}
+       — <a href="https://www.openstreetmap.org/?mlat={{ tree.canonical_lat }}&mlon={{ tree.canonical_lon }}#map=19/{{ tree.canonical_lat }}/{{ tree.canonical_lon }}" target="_blank" rel="noopener">view on OSM</a></p>
+  </header>
+  <div id="gallery" class="gallery"></div>
+</section>
+{% endblock %}
+{% block scripts %}
+<script>
+const treeId = document.querySelector('.tree-detail').dataset.treeId;
+fetch(`/api/trees/${treeId}`).then(r => r.json()).then(t => {
+  const g = document.getElementById('gallery');
+  g.innerHTML = t.sightings.map(s => `
+    <figure class="card">
+      <a href="${s.photo_url}" target="_blank" rel="noopener">
+        <img src="${s.thumb_url}" alt="sighting" loading="lazy">
+      </a>
+      <figcaption>
+        <strong>${escapeHtml(s.submitter)}</strong>
+        <time>${new Date(s.created_at).toLocaleDateString()}</time>
+        ${s.comment ? `<p>${escapeHtml(s.comment)}</p>` : ''}
+      </figcaption>
+    </figure>
+  `).join('');
+});
+function escapeHtml(s) {
+  return s.replace(/[&<>"']/g, c => ({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]));
+}
+</script>
+{% endblock %}

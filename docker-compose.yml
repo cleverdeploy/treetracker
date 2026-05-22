@@ -1,0 +1,27 @@
+services:
+  db:
+    image: postgres:16-alpine
+    environment:
+      POSTGRES_USER: treetracker
+      POSTGRES_PASSWORD: treetracker
+      POSTGRES_DB: treetracker
+    ports: ["5432:5432"]
+    volumes: ["pgdata:/var/lib/postgresql/data"]
+  app:
+    build: .
+    depends_on: [db]
+    environment:
+      DATABASE_URL: postgresql+psycopg://treetracker:treetracker@db:5432/treetracker
+      SESSION_SECRET: dev-secret-change-me
+      GOOGLE_CLIENT_ID: ${GOOGLE_CLIENT_ID:-}
+      GOOGLE_CLIENT_SECRET: ${GOOGLE_CLIENT_SECRET:-}
+      OAUTH_REDIRECT_URL: http://localhost:8000/auth/callback
+      ANTHROPIC_API_KEY: ${ANTHROPIC_API_KEY:-}
+      ADMIN_EMAILS: ${ADMIN_EMAILS:-}
+      PHOTOS_DIR: /data/photos
+      BASE_URL: http://localhost:8000
+    ports: ["8000:8000"]
+    volumes: ["photos:/data/photos"]
+volumes:
+  pgdata: {}
+  photos: {}

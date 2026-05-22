@@ -1,0 +1,61 @@
+{% extends "base.html" %}
+{% block title %}Approval queue{% endblock %}
+{% block head %}
+<link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css"
+      integrity="sha256-p4NxAoJBhIIN+hmNHrzRCf9tD/miZyoHS5obTRR9BMY=" crossorigin="">
+{% endblock %}
+{% block main %}
+<section class="queue">
+  <h1>Approval queue <span class="muted">({{ pending|length }})</span></h1>
+  {% if not pending %}
+    <p class="muted">Nothing pending. 🌱</p>
+  {% endif %}
+  {% for s in pending %}
+  <article class="queue-item" data-id="{{ s.id }}"
+           data-lat="{{ s.lat if s.lat is not none else '' }}"
+           data-lon="{{ s.lon if s.lon is not none else '' }}">
+    <a href="/photos/{{ s.id }}/full" target="_blank" rel="noopener">
+      <img src="/photos/{{ s.id }}/thumb" alt="sighting">
+    </a>
+    <div class="meta">
+      <p><strong>Detected:</strong>
+        {{ s.detected_tag or '—' }}
+        {% if s.detected_conf is not none %}
+          <span class="muted">({{ '%.0f%%'|format(s.detected_conf * 100) }})</span>
+        {% endif %}
+      </p>
+      <p><strong>GPS:</strong>
+        {% if s.lat is not none %}
+          {{ '%.5f'|format(s.lat) }}, {{ '%.5f'|format(s.lon) }} ({{ s.gps_source }})
+        {% else %}
+          <em>none — set on map below</em>
+        {% endif %}
+      </p>
+      {% if s.comment %}<p><strong>Note:</strong> {{ s.comment }}</p>{% endif %}
+      <p class="muted">From {{ s.user.email }} · {{ s.created_at.strftime('%Y-%m-%d %H:%M') }}</p>
+
+      <div class="approve-row">
+        <input class="final-tag" type="text" inputmode="numeric"
+               value="{{ s.final_tag or s.detected_tag or '' }}" placeholder="final tag #">
+        <button class="approve">Approve</button>
+      </div>
+      <div class="reject-row">
+        <input class="reject-reason" type="text" placeholder="reject reason">
+        <button class="reject ghost">Reject</button>
+      </div>
+
+      <details class="map-toggle"><summary>Adjust location on map</summary>
+        <div class="mini-map"></div>
+      </details>
+
+      <p class="result"></p>
+    </div>
+  </article>
+  {% endfor %}
+</section>
+{% endblock %}
+{% block scripts %}
+<script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js"
+        integrity="sha256-20nQCchB9co0qIjJZRGuk2/Z9VM+kNiyxNV1lvTlZBo=" crossorigin=""></script>
+<script src="/static/admin.js"></script>
+{% endblock %}

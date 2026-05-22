@@ -1,0 +1,14 @@
+{
+  "name": "Tree Tracker",
+  "short_name": "TreeTracker",
+  "description": "Catalogue tagged trees in Stratford-upon-Avon",
+  "start_url": "/",
+  "display": "standalone",
+  "background_color": "#0f0f13",
+  "theme_color": "#0f0f13",
+  "icons": [
+    { "src": "/static/icons/leaf.svg", "sizes": "any", "type": "image/svg+xml", "purpose": "any" },
+    { "src": "/static/icons/leaf-192.png", "sizes": "192x192", "type": "image/png", "purpose": "any maskable" },
+    { "src": "/static/icons/leaf-512.png", "sizes": "512x512", "type": "image/png", "purpose": "any maskable" }
+  ]
+}

@@ -1,0 +1,35 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<meta name="theme-color" content="#0f0f13">
+<title>{% block title %}Tree Tracker{% endblock %}</title>
+<link rel="manifest" href="/manifest.webmanifest">
+<link rel="icon" href="/static/icons/leaf.svg" type="image/svg+xml">
+<link rel="stylesheet" href="/static/app.css">
+{% block head %}{% endblock %}
+</head>
+<body>
+<header class="top">
+  <a class="brand" href="/"><span class="logo">🌳</span><span>Tree Tracker</span></a>
+  <nav>
+    <a href="/" class="navlink">Map</a>
+    {% if user %}
+      <a href="/submit" class="navlink primary">+ Add</a>
+      {% if user.is_admin %}<a href="/admin" class="navlink">Queue</a>{% endif %}
+      <a href="/auth/logout" class="navlink ghost" title="{{ user.email }}">Sign out</a>
+    {% else %}
+      <a href="/auth/login" class="navlink primary">Sign in</a>
+    {% endif %}
+  </nav>
+</header>
+<main>{% block main %}{% endblock %}</main>
+<script>
+if ('serviceWorker' in navigator) {
+  navigator.serviceWorker.register('/sw.js').catch(() => {});
+}
+</script>
+{% block scripts %}{% endblock %}
+</body>
+</html>

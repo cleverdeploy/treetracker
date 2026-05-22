@@ -1,0 +1,53 @@
+{% extends "base.html" %}
+{% block title %}Add a tree{% endblock %}
+{% block head %}
+<link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css"
+      integrity="sha256-p4NxAoJBhIIN+hmNHrzRCf9tD/miZyoHS5obTRR9BMY=" crossorigin="">
+{% endblock %}
+{% block main %}
+<section class="form-card">
+  <h1>Add a tree</h1>
+  <p class="muted">Photograph the numbered tag. GPS comes from the photo automatically when possible.</p>
+
+  <form id="upload-form" enctype="multipart/form-data">
+    <label class="photo-picker">
+      <input type="file" id="photo" name="photo" accept="image/*" capture="environment" required>
+      <span class="picker-hint">📷 Tap to take a photo</span>
+    </label>
+    <div id="preview-wrap" hidden>
+      <img id="preview" alt="preview">
+    </div>
+
+    <label>
+      Notes (optional)
+      <textarea name="comment" rows="3" placeholder="Anything to flag for review?"></textarea>
+    </label>
+
+    <details>
+      <summary>Tag unreadable? Enter the number manually</summary>
+      <input type="text" name="manual_tag" inputmode="numeric" placeholder="e.g. 0042">
+    </details>
+
+    <button type="submit" id="submit-btn">Submit</button>
+    <p id="status" class="status"></p>
+  </form>
+
+  <div id="pin-step" hidden>
+    <h2>One more step — drop a pin</h2>
+    <p class="muted">We couldn't read GPS from your photo. Tap the map at the tree's location.</p>
+    <div id="pin-map" class="pin-map"></div>
+    <button id="pin-save" disabled>Save location</button>
+  </div>
+
+  <div id="done" hidden>
+    <h2>Thanks!</h2>
+    <p>Your sighting is in the queue for review.</p>
+    <a href="/">Back to map</a>
+  </div>
+</section>
+{% endblock %}
+{% block scripts %}
+<script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js"
+        integrity="sha256-20nQCchB9co0qIjJZRGuk2/Z9VM+kNiyxNV1lvTlZBo=" crossorigin=""></script>
+<script src="/static/submit.js"></script>
+{% endblock %}
