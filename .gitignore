@@ -10,3 +10,7 @@ dist/
 build/
 data/
 .DS_Store
+
+client_secret_*.json
+pg-ca.crt
+HANDOFF.md
