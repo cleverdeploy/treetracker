@@ -1,6 +1,7 @@
 const STRATFORD = [52.1917, -1.7080];
 const form = document.getElementById('upload-form');
-const photo = document.getElementById('photo');
+const photoCamera = document.getElementById('photo-camera');
+const photoLibrary = document.getElementById('photo-library');
 const preview = document.getElementById('preview');
 const previewWrap = document.getElementById('preview-wrap');
 const statusEl = document.getElementById('status');
@@ -10,20 +11,35 @@ const pinSave = document.getElementById('pin-save');
 const doneEl = document.getElementById('done');
 
 let pinMap, pinMarker, currentSightingId;
+let selectedFile = null;
 
-photo.addEventListener('change', () => {
-  if (photo.files[0]) {
-    preview.src = URL.createObjectURL(photo.files[0]);
-    previewWrap.hidden = false;
-  }
-});
+function pickFile(input, other) {
+  input.addEventListener('change', () => {
+    if (input.files[0]) {
+      selectedFile = input.files[0];
+      other.value = '';
+      preview.src = URL.createObjectURL(selectedFile);
+      previewWrap.hidden = false;
+    }
+  });
+}
+pickFile(photoCamera, photoLibrary);
+pickFile(photoLibrary, photoCamera);
 
 form.addEventListener('submit', async (e) => {
   e.preventDefault();
-  if (!photo.files[0]) return;
+  if (!selectedFile) {
+    setStatus('Pick a photo first.', 'error');
+    return;
+  }
   submitBtn.disabled = true;
   setStatus('Uploading…');
-  const fd = new FormData(form);
+  const fd = new FormData();
+  fd.append('photo', selectedFile);
+  const comment = form.querySelector('[name=comment]');
+  if (comment && comment.value) fd.append('comment', comment.value);
+  const manual = form.querySelector('[name=manual_tag]');
+  if (manual && manual.value) fd.append('manual_tag', manual.value);
   try {
     const r = await fetch('/api/sightings', { method: 'POST', body: fd });
     if (!r.ok) {
