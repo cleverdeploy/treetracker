@@ -9,7 +9,10 @@
 {% block main %}
 <div class="map-wrap">
   <form id="tree-search" class="map-search" role="search" autocomplete="off">
-    <input type="text" id="tree-search-input" inputmode="numeric" placeholder="Find tree #…" aria-label="Find tree by tag number">
+    <input type="text" id="tree-search-input" inputmode="numeric"
+           placeholder="Find tree #…" aria-label="Find tree by tag number"
+           autocomplete="off" autocorrect="off" autocapitalize="off" spellcheck="false"
+           name="tree-search-input-no-autofill">
     <button type="submit" aria-label="Search">🔍</button>
   </form>
   <div id="search-results" class="search-results" hidden></div>

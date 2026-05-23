@@ -33,6 +33,7 @@ const input = document.getElementById('tree-search-input');
 const results = document.getElementById('search-results');
 
 function normalize(s) { return (s || '').replace(/\D/g, ''); }
+function stripZeros(s) { return s.replace(/^0+/, '') || '0'; }
 
 function focusMarker(marker) {
   const ll = marker.getLatLng();
@@ -40,20 +41,45 @@ function focusMarker(marker) {
   setTimeout(() => marker.openPopup(), 250);
 }
 
-function renderResults(matches) {
+/**
+ * Search ranking:
+ *   1. exact tag match
+ *   2. tag equals query with leading zeros stripped (so "1" → "0001")
+ *   3. substring contains
+ * Returns [[tag, marker], ...] in priority order.
+ */
+function searchMatches(q) {
+  const qz = stripZeros(q);
+  const exact = [];
+  const trimmed = [];
+  const substr = [];
+  for (const [tag, m] of markersByTag.entries()) {
+    if (tag === q) exact.push([tag, m]);
+    else if (stripZeros(tag) === qz) trimmed.push([tag, m]);
+    else if (tag.includes(q)) substr.push([tag, m]);
+  }
+  return [...exact, ...trimmed, ...substr];
+}
+
+function showMatches(matches, autoFocusBest) {
   if (matches.length === 0) {
     results.innerHTML = '<p class="muted">No matching tree.</p>';
     results.hidden = false;
     return;
   }
-  if (matches.length === 1) {
+  if (autoFocusBest) {
     results.hidden = true;
     focusMarker(matches[0][1]);
     return;
   }
-  results.innerHTML = matches.slice(0, 12).map(([tag]) =>
-    `<button type="button" data-tag="${tag}">#${tag}</button>`
-  ).join('');
+  const best = matches[0];
+  const rest = matches.slice(1, 12);
+  const restHtml = rest.length
+    ? `<div class="search-more">also: ${rest.map(([t]) =>
+        `<button type="button" data-tag="${t}">#${t}</button>`).join('')}</div>`
+    : '';
+  results.innerHTML =
+    `<button type="button" class="best" data-tag="${best[0]}">Show #${best[0]}</button>` + restHtml;
   results.hidden = false;
 }
 
@@ -68,16 +94,11 @@ form.addEventListener('submit', (e) => {
   e.preventDefault();
   const q = normalize(input.value);
   if (!q) return;
-  const exact = markersByTag.get(q);
-  if (exact) { results.hidden = true; focusMarker(exact); return; }
-  // Substring match on tag number
-  const matches = [...markersByTag.entries()].filter(([t]) => t.includes(q));
-  renderResults(matches);
+  showMatches(searchMatches(q), /* autoFocusBest */ true);
 });
 
 input.addEventListener('input', () => {
   const q = normalize(input.value);
   if (!q) { results.hidden = true; return; }
-  const matches = [...markersByTag.entries()].filter(([t]) => t.includes(q));
-  renderResults(matches);
+  showMatches(searchMatches(q), /* autoFocusBest */ false);
 });
