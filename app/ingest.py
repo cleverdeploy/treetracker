@@ -7,7 +7,7 @@ from dataclasses import dataclass
 
 from sqlalchemy.orm import Session
 
-from app import exif, ocr, storage
+from app import ocr, storage
 from app.models import Sighting, User
 
 
@@ -26,9 +26,11 @@ def ingest_upload(
     manual_tag: str | None = None,
 ) -> IngestResult:
     sighting_id = uuid.uuid4()
-    orig_path, thumb_path = storage.store(sighting_id, raw_bytes, content_type)
+    stored = storage.store(sighting_id, raw_bytes, content_type)
+    orig_path = stored.orig_path
+    thumb_path = stored.thumb_path
+    gps = stored.gps
 
-    gps = exif.extract_gps(orig_path)
     ocr_result = ocr.read_tag(orig_path)
 
     detected = ocr_result.tag
