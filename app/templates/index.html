@@ -7,7 +7,14 @@
 <link rel="stylesheet" href="https://unpkg.com/leaflet.markercluster@1.5.3/dist/MarkerCluster.Default.css">
 {% endblock %}
 {% block main %}
-<div id="map" class="full-map"></div>
+<div class="map-wrap">
+  <form id="tree-search" class="map-search" role="search" autocomplete="off">
+    <input type="text" id="tree-search-input" inputmode="numeric" placeholder="Find tree #…" aria-label="Find tree by tag number">
+    <button type="submit" aria-label="Search">🔍</button>
+  </form>
+  <div id="search-results" class="search-results" hidden></div>
+  <div id="map" class="full-map"></div>
+</div>
 {% if not user %}
 <div class="floating-hint">Sign in to add a tree</div>
 {% endif %}
