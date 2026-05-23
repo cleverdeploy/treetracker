@@ -28,6 +28,12 @@ pickFile(photoLibrary, photoCamera);
 
 form.addEventListener('submit', async (e) => {
   e.preventDefault();
+  const manual = form.querySelector('[name=manual_tag]');
+  if (!manual.value.trim()) {
+    setStatus('Enter the tag number.', 'error');
+    manual.focus();
+    return;
+  }
   if (!selectedFile) {
     setStatus('Pick a photo first.', 'error');
     return;

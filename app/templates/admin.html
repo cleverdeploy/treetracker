@@ -18,12 +18,7 @@
       <img src="/photos/{{ s.id }}/thumb" alt="sighting">
     </a>
     <div class="meta">
-      <p><strong>Detected:</strong>
-        {{ s.detected_tag or '—' }}
-        {% if s.detected_conf is not none %}
-          <span class="muted">({{ '%.0f%%'|format(s.detected_conf * 100) }})</span>
-        {% endif %}
-      </p>
+      <p><strong>Submitted tag:</strong> {{ s.final_tag or '—' }}</p>
       <p><strong>GPS:</strong>
         {% if s.lat is not none %}
           {{ '%.5f'|format(s.lat) }}, {{ '%.5f'|format(s.lon) }} ({{ s.gps_source }})

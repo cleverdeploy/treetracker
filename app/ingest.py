@@ -31,11 +31,6 @@ def ingest_upload(
     thumb_path = stored.thumb_path
     gps = stored.gps
 
-    ocr_result = ocr.read_tag(orig_path)
-
-    detected = ocr_result.tag
-    if detected:
-        detected = ocr.normalize_tag(detected) or None
     final_tag = ocr.normalize_tag(manual_tag) if manual_tag else None
 
     sighting = Sighting(
@@ -46,8 +41,8 @@ def ingest_upload(
         lat=gps[0] if gps else None,
         lon=gps[1] if gps else None,
         gps_source="exif" if gps else "none",
-        detected_tag=detected,
-        detected_conf=ocr_result.confidence,
+        detected_tag=None,
+        detected_conf=None,
         final_tag=final_tag,
         comment=(comment or "").strip() or None,
         status="pending",

@@ -7,9 +7,14 @@
 {% block main %}
 <section class="form-card">
   <h1>Add a tree</h1>
-  <p class="muted">Photograph the numbered tag. GPS comes from the photo automatically when possible.</p>
+  <p class="muted">Enter the tag number, then add a photo. GPS comes from the photo when available.</p>
 
   <form id="upload-form" enctype="multipart/form-data">
+    <label>
+      Tag number
+      <input type="text" name="manual_tag" inputmode="numeric" placeholder="e.g. 0042" required autocomplete="off">
+    </label>
+
     <div class="photo-buttons">
       <label class="photo-picker">
         <input type="file" id="photo-camera" accept="image/*" capture="environment">
@@ -28,11 +33,6 @@
       Notes (optional)
       <textarea name="comment" rows="3" placeholder="Anything to flag for review?"></textarea>
     </label>
-
-    <details>
-      <summary>Tag unreadable? Enter the number manually</summary>
-      <input type="text" name="manual_tag" inputmode="numeric" placeholder="e.g. 0042">
-    </details>
 
     <button type="submit" id="submit-btn">Submit</button>
     <p id="status" class="status"></p>
