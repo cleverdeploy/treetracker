@@ -1,5 +1,5 @@
 // Minimal service worker — caches the app shell for offline read-only use.
-const CACHE = 'treetracker-v1';
+const CACHE = 'treetracker-v2';
 const SHELL = ['/', '/static/app.css', '/static/map.js', '/static/icons/leaf.svg'];
 
 self.addEventListener('install', (e) => {
