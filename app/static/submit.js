@@ -44,8 +44,7 @@ form.addEventListener('submit', async (e) => {
   fd.append('photo', selectedFile);
   const comment = form.querySelector('[name=comment]');
   if (comment && comment.value) fd.append('comment', comment.value);
-  const manual = form.querySelector('[name=manual_tag]');
-  if (manual && manual.value) fd.append('manual_tag', manual.value);
+  fd.append('manual_tag', manual.value);
   try {
     const r = await fetch('/api/sightings', { method: 'POST', body: fd });
     if (!r.ok) {
