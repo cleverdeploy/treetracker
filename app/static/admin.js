@@ -32,6 +32,7 @@ function initQueueItem(item) {
 
   approveBtn.addEventListener('click', async () => {
     approveBtn.disabled = true;
+    rejectBtn.disabled = true;
     try {
       const body = { final_tag: finalTag.value };
       if (lat && lon) { body.lat = lat; body.lon = lon; }
@@ -41,18 +42,17 @@ function initQueueItem(item) {
         body: JSON.stringify(body),
       });
       if (!r.ok) throw new Error(await r.text());
-      result.textContent = '✓ approved';
-      result.style.color = '#6ee7b7';
-      item.style.opacity = 0.55;
-      rejectBtn.disabled = true;
+      resolveItem(item, '✓ approved');
     } catch (err) {
       result.textContent = 'failed: ' + err.message;
       result.style.color = 'var(--danger)';
       approveBtn.disabled = false;
+      rejectBtn.disabled = false;
     }
   });
 
   rejectBtn.addEventListener('click', async () => {
+    approveBtn.disabled = true;
     rejectBtn.disabled = true;
     try {
       const r = await fetch(`/api/sightings/${id}/reject`, {
@@ -61,14 +61,39 @@ function initQueueItem(item) {
         body: JSON.stringify({ reason: reason.value || 'no reason' }),
       });
       if (!r.ok) throw new Error(await r.text());
-      result.textContent = '✗ rejected';
-      result.style.color = 'var(--muted)';
-      item.style.opacity = 0.4;
-      approveBtn.disabled = true;
+      resolveItem(item, '✗ rejected');
     } catch (err) {
       result.textContent = 'failed: ' + err.message;
       result.style.color = 'var(--danger)';
+      approveBtn.disabled = false;
       rejectBtn.disabled = false;
     }
   });
+}
+
+function resolveItem(item, label) {
+  item.classList.add('resolving');
+  const flash = document.createElement('div');
+  flash.className = 'queue-flash';
+  flash.textContent = label;
+  item.appendChild(flash);
+  setTimeout(() => {
+    item.remove();
+    updateQueueCount();
+  }, 700);
+}
+
+function updateQueueCount() {
+  const remaining = document.querySelectorAll('.queue-item').length;
+  const countEl = document.querySelector('.queue h1 .muted');
+  if (countEl) countEl.textContent = `(${remaining})`;
+  if (remaining === 0) {
+    const section = document.querySelector('.queue');
+    if (section && !section.querySelector('.queue-empty')) {
+      const p = document.createElement('p');
+      p.className = 'muted queue-empty';
+      p.textContent = 'Nothing pending. 🌱';
+      section.appendChild(p);
+    }
+  }
 }

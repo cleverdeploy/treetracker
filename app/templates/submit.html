@@ -10,29 +10,31 @@
   <p class="muted">Enter the tag number, then add a photo. GPS comes from the photo when available.</p>
 
   <form id="upload-form" enctype="multipart/form-data">
-    <label>
-      Tag number
-      <input type="text" name="manual_tag" inputmode="numeric" placeholder="e.g. 0042" required autocomplete="off">
-    </label>
+    <div class="submit-grid">
+      <div class="photo-buttons">
+        <label class="photo-picker">
+          <input type="file" id="photo-camera" accept="image/*" capture="environment">
+          <span class="picker-hint">📷 Take photo</span>
+        </label>
+        <label class="photo-picker">
+          <input type="file" id="photo-library" accept="image/*">
+          <span class="picker-hint">🖼️ Choose from library</span>
+        </label>
+      </div>
+      <div id="preview-wrap" class="preview-box">
+        <img id="preview" alt="preview" hidden>
+        <span class="preview-placeholder">Photo preview</span>
+      </div>
 
-    <div class="photo-buttons">
-      <label class="photo-picker">
-        <input type="file" id="photo-camera" accept="image/*" capture="environment">
-        <span class="picker-hint">📷 Take photo</span>
+      <label>
+        Tag number
+        <input type="text" name="manual_tag" inputmode="numeric" placeholder="e.g. 0042" required autocomplete="off">
       </label>
-      <label class="photo-picker">
-        <input type="file" id="photo-library" accept="image/*">
-        <span class="picker-hint">🖼️ Choose from library</span>
+      <label>
+        Notes (optional)
+        <textarea name="comment" rows="3" placeholder="Anything to flag for review?"></textarea>
       </label>
     </div>
-    <div id="preview-wrap" hidden>
-      <img id="preview" alt="preview">
-    </div>
-
-    <label>
-      Notes (optional)
-      <textarea name="comment" rows="3" placeholder="Anything to flag for review?"></textarea>
-    </label>
 
     <button type="submit" id="submit-btn">Submit</button>
     <p id="status" class="status"></p>
@@ -55,5 +57,5 @@
 {% block scripts %}
 <script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js"
         integrity="sha256-20nQCchB9co0qIjJZRGuk2/Z9VM+kNiyxNV1lvTlZBo=" crossorigin=""></script>
-<script src="/static/submit.js?v=2"></script>
+<script src="/static/submit.js?v=3"></script>
 {% endblock %}

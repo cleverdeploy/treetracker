@@ -19,7 +19,8 @@ function pickFile(input, other) {
       selectedFile = input.files[0];
       other.value = '';
       preview.src = URL.createObjectURL(selectedFile);
-      previewWrap.hidden = false;
+      preview.hidden = false;
+      previewWrap.classList.add('has-photo');
     }
   });
 }
