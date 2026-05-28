@@ -22,8 +22,9 @@ def ingest_upload(
     user: User,
     raw_bytes: bytes,
     content_type: str,
-    comment: str | None,
+    comment: str | None = None,
     manual_tag: str | None = None,
+    status: str = "pending",
 ) -> IngestResult:
     sighting_id = uuid.uuid4()
     stored = storage.store(sighting_id, raw_bytes, content_type)
@@ -45,7 +46,7 @@ def ingest_upload(
         detected_conf=None,
         final_tag=final_tag,
         comment=(comment or "").strip() or None,
-        status="pending",
+        status=status,
     )
     session.add(sighting)
     session.flush()

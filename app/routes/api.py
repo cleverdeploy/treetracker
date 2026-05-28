@@ -3,14 +3,14 @@ from __future__ import annotations
 import uuid
 from typing import Annotated
 
-from fastapi import APIRouter, Depends, File, Form, HTTPException, Response, UploadFile, status
+from fastapi import APIRouter, Depends, File, HTTPException, Response, UploadFile, status
 from fastapi.responses import FileResponse, JSONResponse
 from pydantic import BaseModel
 from sqlalchemy import select
 from sqlalchemy.orm import Session
 
 from app import ingest as ingest_mod
-from app import moderation, ratelimit
+from app import moderation, ocr, ratelimit, storage
 from app.auth import current_user, require_admin, require_user
 from app.db import get_session
 from app.models import Sighting, Tree, User
@@ -36,17 +36,19 @@ class RejectPayload(BaseModel):
     reason: str
 
 
+class FinalizePayload(BaseModel):
+    manual_tag: str
+    comment: str | None = None
+
+
 @router.post("/sightings", status_code=201)
 async def create_sighting(
     user: Annotated[User, Depends(require_user)],
     session: Annotated[Session, Depends(get_session)],
     photo: UploadFile = File(...),
-    comment: str | None = Form(None),
-    manual_tag: str | None = Form(None),
 ):
-    if not ratelimit.check(user.id):
-        raise HTTPException(status_code=429, detail="rate limit exceeded")
-
+    """Eager photo upload: stores the image and creates a draft. The tag and
+    comment are attached later via /finalize, which promotes draft -> pending."""
     if photo.content_type not in ALLOWED_MIME:
         raise HTTPException(status_code=415, detail=f"unsupported type: {photo.content_type}")
     raw = await photo.read()
@@ -60,10 +62,45 @@ async def create_sighting(
         user=user,
         raw_bytes=raw,
         content_type=photo.content_type or "image/jpeg",
-        comment=comment,
-        manual_tag=manual_tag,
+        status="draft",
     )
     return {"id": str(result.sighting_id), "needs_location": result.needs_location}
+
+
+@router.post("/sightings/{sighting_id}/finalize")
+def finalize_sighting(
+    sighting_id: uuid.UUID,
+    payload: FinalizePayload,
+    user: Annotated[User, Depends(require_user)],
+    session: Annotated[Session, Depends(get_session)],
+):
+    s = session.get(Sighting, sighting_id)
+    if s is None or s.user_id != user.id:
+        raise HTTPException(status_code=404, detail="not found")
+    if s.status != "draft":
+        raise HTTPException(status_code=409, detail="already submitted")
+    if not ratelimit.check(user.id):
+        raise HTTPException(status_code=429, detail="rate limit exceeded")
+    s.final_tag = ocr.normalize_tag(payload.manual_tag)
+    s.comment = (payload.comment or "").strip() or None
+    s.status = "pending"
+    return {"ok": True}
+
+
+@router.delete("/sightings/{sighting_id}", status_code=204)
+def delete_draft(
+    sighting_id: uuid.UUID,
+    user: Annotated[User, Depends(require_user)],
+    session: Annotated[Session, Depends(get_session)],
+):
+    s = session.get(Sighting, sighting_id)
+    if s is None or s.user_id != user.id:
+        raise HTTPException(status_code=404, detail="not found")
+    if s.status != "draft":
+        raise HTTPException(status_code=409, detail="not a draft")
+    session.delete(s)
+    storage.delete(sighting_id)
+    return Response(status_code=204)
 
 
 @router.patch("/sightings/{sighting_id}/location")

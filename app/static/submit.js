@@ -12,16 +12,46 @@ const doneEl = document.getElementById('done');
 
 let pinMap, pinMarker, currentSightingId;
 let selectedFile = null;
+let upload = null; // { promise } — resolves to { id, needsLocation }
+
+function deleteDraft(id) {
+  if (id) fetch(`/api/sightings/${id}`, { method: 'DELETE' }).catch(() => {});
+}
+
+// Upload the photo immediately so the network time overlaps the user typing
+// the tag. Returns { promise } resolving to { id, needsLocation }.
+function startUpload(file) {
+  const fd = new FormData();
+  fd.append('photo', file);
+  setStatus('Uploading photo…');
+  const promise = fetch('/api/sightings', { method: 'POST', body: fd }).then(async (r) => {
+    if (!r.ok) throw new Error(`${r.status} ${await r.text()}`);
+    const data = await r.json();
+    return { id: data.id, needsLocation: data.needs_location };
+  });
+  const handle = { promise };
+  promise.then(
+    () => { if (upload === handle && !submitBtn.disabled) setStatus('✓ Photo ready'); },
+    () => { if (upload === handle && !submitBtn.disabled) setStatus('Photo upload failed — tap Submit to retry.', 'error'); }
+  );
+  return handle;
+}
 
 function pickFile(input, other) {
   input.addEventListener('change', () => {
-    if (input.files[0]) {
-      selectedFile = input.files[0];
-      other.value = '';
-      preview.src = URL.createObjectURL(selectedFile);
-      preview.hidden = false;
-      previewWrap.classList.add('has-photo');
-    }
+    if (!input.files[0]) return;
+    other.value = '';
+    // Supersede any prior upload: let it finish, then delete the draft it made
+    // (aborting can't undo a create the server already accepted).
+    if (upload) upload.promise.then((res) => deleteDraft(res.id), () => {});
+    currentSightingId = null;
+
+    selectedFile = input.files[0];
+    preview.src = URL.createObjectURL(selectedFile);
+    preview.hidden = false;
+    previewWrap.classList.add('has-photo');
+
+    upload = startUpload(selectedFile);
   });
 }
 pickFile(photoCamera, photoLibrary);
@@ -35,26 +65,35 @@ form.addEventListener('submit', async (e) => {
     manual.focus();
     return;
   }
-  if (!selectedFile) {
+  if (!selectedFile || !upload) {
     setStatus('Pick a photo first.', 'error');
     return;
   }
   submitBtn.disabled = true;
-  setStatus('Uploading…');
-  const fd = new FormData();
-  fd.append('photo', selectedFile);
-  const comment = form.querySelector('[name=comment]');
-  if (comment && comment.value) fd.append('comment', comment.value);
-  fd.append('manual_tag', manual.value);
+  setStatus('Finishing upload…');
+
+  let res;
   try {
-    const r = await fetch('/api/sightings', { method: 'POST', body: fd });
-    if (!r.ok) {
-      const t = await r.text();
-      throw new Error(`${r.status} ${t}`);
-    }
-    const data = await r.json();
-    currentSightingId = data.id;
-    if (data.needs_location) {
+    res = await upload.promise;
+  } catch (err) {
+    setStatus('Photo upload failed: ' + err.message, 'error');
+    upload = startUpload(selectedFile); // re-arm for retry
+    submitBtn.disabled = false;
+    return;
+  }
+
+  const comment = form.querySelector('[name=comment]');
+  setStatus('Saving…');
+  try {
+    const r = await fetch(`/api/sightings/${res.id}/finalize`, {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ manual_tag: manual.value, comment: comment ? comment.value : null }),
+    });
+    if (!r.ok) throw new Error(`${r.status} ${await r.text()}`);
+    upload = null; // row is now pending — must not be deleted as a draft
+    currentSightingId = res.id;
+    if (res.needsLocation) {
       form.hidden = true;
       pinStep.hidden = false;
       initPinMap();
@@ -63,7 +102,7 @@ form.addEventListener('submit', async (e) => {
       finish();
     }
   } catch (err) {
-    setStatus('Upload failed: ' + err.message, 'error');
+    setStatus('Submit failed: ' + err.message, 'error');
     submitBtn.disabled = false;
   }
 });

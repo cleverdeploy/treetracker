@@ -1,5 +1,6 @@
 import io
 import uuid
+from pathlib import Path
 
 import piexif
 from PIL import Image
@@ -26,6 +27,16 @@ def test_store_creates_files_and_thumb():
     assert o.size == (2000, 1500)
     t = Image.open(stored.thumb_path)
     assert max(t.size) <= storage.THUMB_MAX
+
+
+def test_delete_removes_photo_dir():
+    sid = uuid.uuid4()
+    stored = storage.store(sid, _png_bytes(), "image/png")
+    photo_dir = Path(stored.orig_path).parent
+    assert photo_dir.is_dir()
+    storage.delete(sid)
+    assert not photo_dir.exists()
+    storage.delete(sid)  # second call is a no-op, not an error
 
 
 def _jpeg_with_gps_bytes() -> bytes:

@@ -3,6 +3,7 @@
 from __future__ import annotations
 
 import io
+import shutil
 import uuid
 from dataclasses import dataclass
 from pathlib import Path
@@ -91,3 +92,12 @@ def store(sighting_id: uuid.UUID, raw_bytes: bytes, content_type: str) -> Stored
     thumb.save(thumb_path, "JPEG", quality=85)
 
     return StoredPhoto(orig_path=str(orig_path), thumb_path=str(thumb_path), gps=gps)
+
+
+def delete(sighting_id: uuid.UUID) -> None:
+    """Remove a sighting's photo directory. No-op if it doesn't exist."""
+    root = _root().resolve()
+    dest = (root / str(sighting_id)).resolve()
+    if not dest.is_relative_to(root):
+        raise ValueError("refusing to delete outside photos_dir")
+    shutil.rmtree(dest, ignore_errors=True)
